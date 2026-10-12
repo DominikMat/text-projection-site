@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+    <meta charset="UTF - 8">
+    <meta name="viewport" content="width=device - width, initial - scale=1.0">
+    <title>Canvas+TS Boilerplate</title>
+    <style> 
+        header {
+            background-color: darkcyan;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size:larger;
+            height: 5vh;
+        }
+        body {
+            margin: 0px;
+            background-color: rgb(39, 39, 39);
+        }
+        canvas {
+            width: 100vw;
+            height: 90vh;
+            background-color: rgb(39, 39, 39);
+        }
+
+        .ctrl-element {
+            margin: 20px 0px 0px 20px;
+            padding: 10px;
+        }
+    </style>
+</head>
+ 
+<body>
+    <header> <b> Text projection </b> by Dominik Mat </header>
+    <div id="controls">
+        <input id="text-input" class="ctrl-element" placeholder="Text for projection hiding"/>
+        <button id="project-btn" class="ctrl-element"> Project </button>
+    </div>
+    <canvas id="canvas"> </canvas>
+    <script src="index.js"></script>
+</body>
+ 
