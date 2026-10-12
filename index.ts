@@ -216,8 +216,8 @@ function generateLetterTarget(inputLetterPointsXY: Array<Point>, outputLetterPoi
     printPoints("INPUT POINTS: ", inputLetterPointsXY)
     printPoints("FROM XY OUTPUT: ", outputLetterPointsXY)
     printPoints("PROJECT OUTPUT: ", returnLetters)
-    // return returnLetters
-    return outputLetterPointsXY
+    return returnLetters
+    // return outputLetterPointsXY
 }
 
 
@@ -229,10 +229,10 @@ function drawPath(ctx: CanvasRenderingContext2D, points: Array<Point>, isNext: b
     ctx.beginPath()
     if (points.length > 1 && points[0]) {
         let p0 = projectedPoint(points[0] || {x:0,y:0,z:0})
-        ctx.moveTo(width/2+p0.x, height/2+p0.y)
+        ctx.moveTo(width/4+p0.x, height/4+p0.y)
         for (let i=1; i<points.length; i++) {
             let p = projectedPoint(points[i] || {x:0,y:0,z:0})
-            if (p) ctx.lineTo(width/2+p.x, height/2+p.y)
+            if (p) ctx.lineTo(width/4+p.x, height/4+p.y)
         }
     }
 
