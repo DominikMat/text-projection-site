@@ -1,11 +1,10 @@
 "use strict";
 /* Application configuration */
 const canvasElement = document.querySelector('canvas');
-const targetFps = 60;
+// const targetFps = 60
 const deltaTime_ms = 1000 / 60;
-const canvasBackgroundColour = 'rgb(39, 39, 39)';
 const letters = [
-    [{ x: 50, y: 100, z: 0 }, { x: 50, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, { x: -50, y: -50, z: 0 }, { x: 0, y: -100, z: 0 }, { x: 50, y: -100, z: 0 }], // letter d
+    [{ x: -50, y: -50, z: 0 }, { x: 0, y: -100, z: 0 }, { x: 50, y: -100, z: 0 }, { x: 50, y: 100, z: 0 }, { x: 50, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }], // letter d
     [{ x: -50, y: -50, z: 0 }, { x: -25, y: 30, z: 0 }, { x: 0, y: 0, z: 0 }, { x: 25, y: 30, z: 0 }, { x: 50, y: -50, z: 0 }], // letter m
 ];
 let projectionMatrix = [
@@ -16,80 +15,94 @@ let projectionMatrix = [
 let ctx = canvasElement?.getContext('2d');
 let width = window.innerWidth;
 let height = window.innerHeight;
-/* Button */
+/* Buttons */
 let projectBtn = document.getElementById("project-btn");
 if (projectBtn)
     projectBtn.onclick = () => onProjectButtonClicked();
-let currentLetters = letters[0] || [];
-let currentProjection = letters[0] || [];
-let letterTarget = letters[1] || [];
-let letterProjectionTarget = letters[1] || [];
-let currentLetterIdx = 0;
+let loadBtn = document.getElementById("load-btn");
+if (loadBtn)
+    loadBtn.onclick = () => onLoadButtonClicked();
+/* String input */
+let textInput = document.getElementById("text-input");
+let selectedTextDisplay = document.getElementById("selected-text");
+/* Point data */
+let currentLetterPointsXY = letters[0] || [];
+let currentLetterProjection = letters[0] || [];
+let targetLetterPointsXY = letters[1] || [];
+let targetLetterProjection = letters[1] || [];
+let currentStringTargetPositionIndex = 0;
+let stringTarget = "ab";
 /* Timers */
 const ROTATION_TIME_SECONDS = 2;
 let rotationStartTime = 0;
 let isRotating = false;
 let currentRotationState = false;
-const stringTarget = "ab";
-// your init logic here
+/* ========================================================================================== */
+/* Main Application Logic */
+/* ========================================================================================== */
 function init() {
-    letterProjectionTarget = generateLetterTarget(currentLetters, letters[1] || []);
+    targetLetterProjection = generateLetterTarget(currentLetterPointsXY, letters[1] || []);
     /* set looping behaviour */
     setInterval(loop, deltaTime_ms);
 }
 function loop() {
-    draw();
     if (isRotating) {
         let t = (Date.now() - rotationStartTime) / (ROTATION_TIME_SECONDS * 1000);
         rotateLoop(t);
     }
+    draw();
+    if (projectBtn)
+        projectBtn.innerText = isRotating ? "Rotating ..." : "Project Next Letter";
 }
 function draw() {
     if (!ctx)
         return;
     // clear canvas
     ctx.clearRect(0, 0, width, height);
-    // draw circle in the middle of the screen
-    if (currentProjection)
-        drawPath(ctx, currentProjection);
-    if (letterProjectionTarget)
-        drawPath(ctx, letterProjectionTarget);
+    // draw projected letters
+    if (currentLetterProjection)
+        drawPath(ctx, currentLetterProjection);
+    if (targetLetterProjection)
+        drawPath(ctx, targetLetterProjection, true);
 }
-function drawPath(ctx, points) {
-    ctx.beginPath();
-    if (points.length > 1 && points[0]) {
-        let p0 = projectedPoint(points[0] || { x: 0, y: 0, z: 0 });
-        ctx.moveTo(width / 2 + p0.x, height / 2 + p0.y);
-        for (let i = 1; i < points.length; i++) {
-            let p = projectedPoint(points[i] || { x: 0, y: 0, z: 0 });
-            if (p)
-                ctx.lineTo(width / 2 + p.x, height / 2 + p.y);
-        }
-    }
-    ctx.closePath();
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 5;
-    ctx.stroke();
-}
-function resize() {
-    const dpr = window.devicePixelRatio;
-    const displayWidth = window.innerWidth;
-    const displayHeight = window.innerHeight * 0.9; // decrese based on header size
-    if (canvasElement) {
-        width = canvasElement.width = Math.floor(displayWidth * dpr);
-        height = canvasElement.height = Math.floor(displayHeight * dpr);
-    }
-    if (ctx)
-        ctx.scale(dpr, dpr);
-}
+/* ========================================================================================== */
+/* User interaction */
+/* ========================================================================================== */
 function onProjectButtonClicked() {
-    currentLetterIdx = (currentLetterIdx + 1) % stringTarget.length;
-    const nextLetterIdx = stringTarget.toLowerCase().charCodeAt(currentLetterIdx) - 96; // get alphabet number a=0 b=1 ... z=25
+    if (isRotating)
+        return;
+    /* Choose next letter from target string */
+    currentStringTargetPositionIndex = (currentStringTargetPositionIndex + 1) % stringTarget.length;
+    const nextLetterIdx = stringTarget.toLowerCase().charCodeAt(currentStringTargetPositionIndex) - 97; // get alphabet number a=0 b=1 ... z=25
+    console.log("Next letter: " + stringTarget.at(currentStringTargetPositionIndex) + " number code: " + nextLetterIdx);
+    updateDisplayText();
+    /* Generate point data for next letter */
+    currentLetterProjection = targetLetterProjection;
+    currentLetterPointsXY = targetLetterPointsXY;
     const nextLetterTarget = letters[nextLetterIdx % letters.length] || [];
-    letterProjectionTarget = generateLetterTarget(letterTarget, nextLetterTarget);
-    letterTarget = nextLetterTarget;
+    targetLetterProjection = generateLetterTarget(targetLetterPointsXY, nextLetterTarget);
+    targetLetterPointsXY = nextLetterTarget;
     startRotation();
 }
+function onLoadButtonClicked() {
+    if (textInput && textInput.value) {
+        let formatString = (textInput.value.toLowerCase()).replace(/[^a-z]/g, '');
+        if (formatString.length < 1)
+            return;
+        stringTarget = formatString;
+        console.log("Loaded string: " + stringTarget);
+        currentStringTargetPositionIndex = 0;
+        updateDisplayText();
+    }
+}
+function updateDisplayText() {
+    if (selectedTextDisplay) {
+        selectedTextDisplay.innerHTML = "<b> Selected: </b> " + stringTarget + "  |  <b>Current Letter:</b> " + stringTarget.at(currentStringTargetPositionIndex);
+    }
+}
+/* ========================================================================================== */
+/* Rotation handlers */
+/* ========================================================================================== */
 function startRotation() {
     rotationStartTime = Date.now();
     isRotating = true;
@@ -126,6 +139,9 @@ function rotateLoop(t) {
         ];
     }
 }
+/* ========================================================================================== */
+/* Projection Logic */
+/* ========================================================================================== */
 // casts point to 2D based on current projection
 function projectedPoint(p) {
     if (projectionMatrix === undefined
@@ -141,7 +157,7 @@ function projectedPoint(p) {
 // given a path of 2D points in 3D space
 // we want to 'hide' a 2D image in the unutilized dimension 
 // this functions accept the first image defined in XY space
-// reutrns the output hidden image in XYZ space
+// returns the output hidden image in XYZ space
 function generateLetterTarget(inputLetterPointsXY, outputLetterPointsXY) {
     if (inputLetterPointsXY.length == 0 || outputLetterPointsXY.length == 0)
         return [];
@@ -170,13 +186,51 @@ function generateLetterTarget(inputLetterPointsXY, outputLetterPointsXY) {
                 hiddenY = t * nextYPos + (1.0 - t) * currentYPos; // lerp 
             }
         }
-        let hiddenP = !currentRotationState ? { x: tp.x, y: hiddenY, z: tp.y } : { x: tp.x, y: tp.y, z: hiddenY };
+        let hiddenP = /* !currentRotationState ? */ { x: tp.x, y: hiddenY, z: tp.y }; //: { x:tp.x, y:tp.y, z:hiddenY}
         returnLetters.push(hiddenP);
     });
-    return returnLetters;
+    printPoints("INPUT POINTS: ", inputLetterPointsXY);
+    printPoints("FROM XY OUTPUT: ", outputLetterPointsXY);
+    printPoints("PROJECT OUTPUT: ", returnLetters);
+    // return returnLetters
+    return outputLetterPointsXY;
+}
+/* ========================================================================================== */
+/* Other helpers */
+/* ========================================================================================== */
+function drawPath(ctx, points, isNext = false) {
+    ctx.beginPath();
+    if (points.length > 1 && points[0]) {
+        let p0 = projectedPoint(points[0] || { x: 0, y: 0, z: 0 });
+        ctx.moveTo(width / 2 + p0.x, height / 2 + p0.y);
+        for (let i = 1; i < points.length; i++) {
+            let p = projectedPoint(points[i] || { x: 0, y: 0, z: 0 });
+            if (p)
+                ctx.lineTo(width / 2 + p.x, height / 2 + p.y);
+        }
+    }
+    ctx.closePath();
+    ctx.strokeStyle = isNext ? 'white' : 'red';
+    ctx.lineWidth = isNext ? 5 : 3;
+    ctx.stroke();
+}
+function resize() {
+    const dpr = window.devicePixelRatio;
+    const displayWidth = window.innerWidth;
+    const displayHeight = window.innerHeight * 0.9; // decrese based on header size
+    if (canvasElement) {
+        width = canvasElement.width = Math.floor(displayWidth * dpr);
+        height = canvasElement.height = Math.floor(displayHeight * dpr);
+    }
+    if (ctx)
+        ctx.scale(dpr, dpr);
 }
 window.onload = () => { resize(); init(); };
 window.onresize = () => { resize(); };
-const isBetween = (x, a, b) => {
-    return (a <= x && x <= b) || (b <= x && x <= a);
-};
+function printPoints(str, ps) {
+    let outStr = str;
+    ps.forEach((p) => {
+        outStr += "(x" + p.x + " y" + p.y + " z" + p.z + "), ";
+    });
+    console.log(outStr);
+}

@@ -28,6 +28,11 @@
             margin: 20px 0px 0px 20px;
             padding: 10px;
         }
+
+        #selected-text {
+            color: white;
+            font-size: large;
+        }
     </style>
 </head>
  
@@ -35,7 +40,9 @@
     <header> <b> Text projection </b> by Dominik Mat </header>
     <div id="controls">
         <input id="text-input" class="ctrl-element" placeholder="Text for projection hiding"/>
-        <button id="project-btn" class="ctrl-element"> Project </button>
+        <button id="load-btn" class="ctrl-element"> Load -> </button>
+        <button id="project-btn" class="ctrl-element"> Project Next Letter </button>
+        <p id="selected-text" class="ctrl-element"> <b> Selected: ... </b> </p>
     </div>
     <canvas id="canvas"> </canvas>
     <script src="index.js"></script>
